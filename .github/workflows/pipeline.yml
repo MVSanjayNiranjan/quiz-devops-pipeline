@@ -1,0 +1,54 @@
+name: Quiz Management DevOps pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    name: 1. Lint (code smells)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements-dev.txt
+      - run: flake8 --max-line-length=110 quiz_system.py test_quiz_system.py
+
+  test:
+    name: 2. Unit tests + coverage
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -v --cov=quiz_system --cov-report=term-missing
+
+  security:
+    name: 3. Security scan (Bandit)
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements-dev.txt
+      - run: bandit -r quiz_system.py
+
+  build:
+    name: 4. Docker build + Trivy scan
+    needs: [test, security]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t quiz-system:${{ github.sha }} .
+      - run: docker run --rm quiz-system:${{ github.sha }}
+      - uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: quiz-system:${{ github.sha }}
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "0"
