@@ -4,21 +4,27 @@ class Question:
         self.text = text
         self.options = options
         self.answer = answer
+
     def display(self):
         print(f"Q{self.q_id}. {self.text}")
         for i, option in enumerate(self.options, start=1):
             print(f"   {i}) {option}")
+
+
 class QuizManagementSystem:
     def __init__(self, quiz_name):
         self.quiz_name = quiz_name
         self.questions = []
+
     def add_question(self, question):
         self.questions.append(question)
         print(f"Added Q{question.q_id} to {self.quiz_name}.")
+
     def list_questions(self):
         print(f"\n--- {self.quiz_name} Question List ---")
         for question in self.questions:
             question.display()
+
     def evaluate(self, student, responses):
         score = 0
         for question in self.questions:
@@ -30,6 +36,8 @@ class QuizManagementSystem:
         print(f"\nStudent: {student} | Score: {score}/{total} | "
               f"Percentage: {percent:.1f}% | Result: {grade}")
         return score
+
+
 # Example Usage
 if __name__ == "__main__":
     qms = QuizManagementSystem("Python Basics Quiz")
